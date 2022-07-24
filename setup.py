@@ -13,7 +13,7 @@ setup(
   author='Gancheng Yuan',
   author_email='scottyuan@outlook.com',
   url='https://github.com/mqfs/leetcodeutils',
-  download_url='https://github.com/mqfs/leetcodeutils/releases/tag/v0.1',
+  download_url='https://github.com/mqfs/leetcodeutils/archive/refs/tags/v0.1.tar.gz',
   keywords=['leetcode', 'debug'],
   install_requires=[],
   classifiers=[
