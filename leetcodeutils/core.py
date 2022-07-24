@@ -6,6 +6,8 @@
 from inspect import signature
 import re
 
+from leetcodeutils.misc import ListNode
+
 
 class CaseWrapper:
 
@@ -44,21 +46,19 @@ class CaseResolver:
         i = 0
         for param_name in method_signature.parameters:
             param = case[i]
-            param_type_str, is_param_optional = CaseResolver.__get_type_str_of_method(method_signature.parameters[param_name].annotation)
-            target_param = CaseResolver.__get_customized_param(param, param_type_str, is_param_optional)
+            param_type_str = CaseResolver.__get_type_str_of_method(method_signature.parameters[param_name].annotation)
+            target_param = CaseResolver.__get_customized_param(param, param_type_str)
             resolved_param_list.append(target_param)
             i += 1
         return resolved_param_list
 
     @staticmethod
-    def __get_type_str_of_method(orig_type) -> tuple:
+    def __get_type_str_of_method(orig_type) -> str:
         orig_type_str = str(orig_type)
-        is_optional = False
-        union_type_reg = re.search("typing\\.Union\\[*\\]", orig_type_str)
+        union_type_reg = re.search("typing\\.Union*", orig_type_str)
         if union_type_reg is not None:
             union_inner_str = orig_type_str[13:-1]
             type_str = union_inner_str.split(',')[0].split('.')[-1]
-            is_optional = True
         else:
             not_union_type_reg = re.search("typing\\.*", orig_type_str)
             if not_union_type_reg is not None:
@@ -70,23 +70,20 @@ class CaseResolver:
                     type_str = qualified_type_str.split('.')[-1]
                 else:
                     type_str = qualified_type_str
-        return type_str, is_optional
+        return type_str
 
     @staticmethod
-    def __get_customized_param(param, customized_type_name: str, is_optional: bool):
+    def __get_customized_param(param, customized_type_name: str):
         result_param = param
         if customized_type_name == 'ListNode':
-            if is_optional:
-                # todo
-                pass
-            else:
-                # todo
-                pass
+            virtual_head = ListNode()
+            node = virtual_head
+            for val in param:
+                list_node = ListNode(val)
+                node.next = list_node
+                node = node.next
+            result_param = virtual_head.next
         elif customized_type_name == 'TreeNode':
-            if is_optional:
-                # todo
-                pass
-            else:
-                # todo
-                pass
+            # todo
+            pass
         return result_param
