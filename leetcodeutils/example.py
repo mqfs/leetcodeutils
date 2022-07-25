@@ -6,54 +6,36 @@
 from typing import Optional
 
 from leetcodeutils import CaseWrapper, CaseExecutor
-
-
-class ListNode:
-    def __init__(self, val=0, next=None):
-        self.val = val
-        self.next = next
+from leetcodeutils.misc import null, TreeNode
 
 
 class Solution:
-    def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
-        node1, node2 = l1, l2
-        ans = cur = ListNode()
-        carry = 0
+    def isValidBST(self, root: Optional[TreeNode]) -> bool:
+        stack, inorder = [], float('-inf')
 
-        while node1 or node2:
-            if node1 and node2:
-                v = node1.val + node2.val + carry
-                node1 = node1.next
-                node2 = node2.next
-            elif node1 is None:
-                v = node2.val + carry
-                node2 = node2.next
-            else:
-                v = node1.val + carry
-                node1 = node1.next
+        while stack or root:
+            while root:
+                stack.append(root)
+                root = root.left
+            root = stack.pop()
+            if root.val <= inorder:
+                return False
+            inorder = root.val
+            root = root.right
 
-            carry, v = divmod(v, 10)
-            cur.next = ListNode(v)
-            cur = cur.next
-
-        if carry:
-            cur.next = ListNode(1)
-        ans = ans.next
-
-        return ans
+        return True
 
 
 if __name__ == '__main__':
     # define a wrapper for test case
     case_wrapper = CaseWrapper(
-        [2,4,3],
-        [5,6,4]
+        [5,1,4,null,null,3,6]
     )
 
     # define a test case executor which can execute user's indicated method
     case_executor = CaseExecutor(
         target_class=Solution,
-        target_method_name="addTwoNumbers",
+        target_method_name="isValidBST",
         case=case_wrapper
     )
 

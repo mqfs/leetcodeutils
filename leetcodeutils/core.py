@@ -6,7 +6,7 @@
 from inspect import signature
 import re
 
-from leetcodeutils.misc import ListNode
+from leetcodeutils.misc import ListNode, TreeNode
 
 
 class CaseWrapper:
@@ -84,6 +84,31 @@ class CaseResolver:
                 node = node.next
             result_param = virtual_head.next
         elif customized_type_name == 'TreeNode':
-            # todo
-            pass
+            tree_size = len(param)
+            if tree_size > 0:
+                root = TreeNode(param[0])
+                temp_queue_1 = [root]
+                i = 1
+                while i < tree_size:
+                    temp_queue_2 = []
+                    for node in temp_queue_1:
+                        if node is None:
+                            continue
+                        if param[i] is None:
+                            left_child = None
+                        else:
+                            left_child = TreeNode(param[i])
+                        if param[i] is None:
+                            right_child = None
+                        else:
+                            right_child = TreeNode(param[i + 1])
+                        node.left = left_child
+                        node.right = right_child
+                        temp_queue_2.append(left_child)
+                        temp_queue_2.append(right_child)
+                        i += 2
+                    temp_queue_1 = temp_queue_2.copy()
+                result_param = root
+            else:
+                result_param = None
         return result_param
