@@ -3,112 +3,47 @@
 @Time ： 2022/7/24 14:51
 @Auth ： Gancheng Yuan
 """
-from inspect import signature
-import re
-
-from leetcodeutils.misc import ListNode, TreeNode
-
-
-class CaseWrapper:
-
-    def __init__(self, *args):
-        self.params = list(args)
-
-    def __getitem__(self, index):
-        return self.params[index]
+from leetcodeutils.base import CaseWrapper
+from leetcodeutils.misc import null
+from leetcodeutils.scheduler import CommonCaseScheduler, ComplexCaseScheduler
+from leetcodeutils.utils import CommonUtils, CommonParamsResolver
 
 
 class CaseExecutor:
 
-    def __init__(self, *target_class_init_args, target_class, target_method_name, case: CaseWrapper):
-        self.target_class_init_args = target_class_init_args
+    def __init__(self, target_class, case: CaseWrapper, target_method_name=None):
         self.target_class = target_class
-        self.target_method_name = target_method_name
         self.case_wrapper = case
+        self.target_method_name = target_method_name
 
     def execute(self):
-        if self.target_class_init_args:
-            target_instance = self.target_class(self.target_class_init_args)
+        result_of_case = CaseSchedulerDispatcher.dispatch(self.target_class, self.target_method_name, self.case_wrapper)
+        return self.__convert_result_of_case_to_output(result_of_case)
+
+    def __convert_result_of_case_to_output(self, result_of_case):
+        target_class_instance = CommonUtils.get_class_instance_by_case(self.target_class, self.case_wrapper)
+        method_sig = CommonUtils.get_method_signature(self.target_class, target_class_instance, self.target_method_name)
+        if method_sig.return_annotation is None:
+            return_type_str = ''
         else:
-            target_instance = self.target_class()
-        target_params_list = CaseResolver.resolve(target_instance, self.target_method_name, self.case_wrapper)
-        target_function = target_instance.__getattribute__(self.target_method_name)
-        return target_function(*target_params_list)
-
-
-class CaseResolver:
-
-    @staticmethod
-    def resolve(target_class_instance, target_method_name: str, case: CaseWrapper) -> list:
-        target_method = target_class_instance.__getattribute__(target_method_name)
-        method_signature = signature(target_method)
-        resolved_param_list = list()
-        i = 0
-        for param_name in method_signature.parameters:
-            param = case[i]
-            param_type_str = CaseResolver.__get_type_str_of_method(method_signature.parameters[param_name].annotation)
-            target_param = CaseResolver.__get_customized_param(param, param_type_str)
-            resolved_param_list.append(target_param)
-            i += 1
-        return resolved_param_list
-
-    @staticmethod
-    def __get_type_str_of_method(orig_type) -> str:
-        orig_type_str = str(orig_type)
-        union_type_reg = re.search("typing\\.Union*", orig_type_str)
-        if union_type_reg is not None:
-            union_inner_str = orig_type_str[13:-1]
-            type_str = union_inner_str.split(',')[0].split('.')[-1]
+            return_type_str = CommonParamsResolver.get_type_str(method_sig.return_annotation)
+        if result_of_case is None:
+            if return_type_str == 'TreeNode' or return_type_str == 'ListNode':
+                return []
+            else:
+                return null()
         else:
-            not_union_type_reg = re.search("typing\\.*", orig_type_str)
-            if not_union_type_reg is not None:
-                type_str = orig_type_str
-            else:
-                type_str_start, type_str_open_end = re.search("'*'", orig_type_str).span()
-                qualified_type_str = orig_type_str[type_str_start:type_str_open_end]
-                if '.' in qualified_type_str:
-                    type_str = qualified_type_str.split('.')[-1]
-                else:
-                    type_str = qualified_type_str
-        return type_str
+            return CommonUtils.convert_result_to_output(result_of_case)
+
+
+class CaseSchedulerDispatcher:
 
     @staticmethod
-    def __get_customized_param(param, customized_type_name: str):
-        result_param = param
-        if customized_type_name == 'ListNode':
-            virtual_head = ListNode()
-            node = virtual_head
-            for val in param:
-                list_node = ListNode(val)
-                node.next = list_node
-                node = node.next
-            result_param = virtual_head.next
-        elif customized_type_name == 'TreeNode':
-            tree_size = len(param)
-            if tree_size > 0:
-                root = TreeNode(param[0])
-                temp_queue_1 = [root]
-                i = 1
-                while i < tree_size:
-                    temp_queue_2 = []
-                    for node in temp_queue_1:
-                        if node is None:
-                            continue
-                        if param[i] is None:
-                            left_child = None
-                        else:
-                            left_child = TreeNode(param[i])
-                        if param[i] is None:
-                            right_child = None
-                        else:
-                            right_child = TreeNode(param[i + 1])
-                        node.left = left_child
-                        node.right = right_child
-                        temp_queue_2.append(left_child)
-                        temp_queue_2.append(right_child)
-                        i += 2
-                    temp_queue_1 = temp_queue_2.copy()
-                result_param = root
-            else:
-                result_param = None
-        return result_param
+    def dispatch(target_class, target_method_name, case: CaseWrapper):
+        if CommonUtils.is_target_class_name_exists_in_case(target_class.__name__, case):
+            complex_case_scheduler = ComplexCaseScheduler(target_class, case)
+            return complex_case_scheduler.schedule()
+        else:
+            common_case_scheduler = CommonCaseScheduler(target_class, target_method_name, case)
+            return common_case_scheduler.schedule()
+
