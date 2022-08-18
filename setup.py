@@ -7,13 +7,13 @@ from distutils.core import setup
 setup(
   name='leetcodeutils',
   packages=['leetcodeutils'],
-  version='1.0',
+  version='1.1',
   license='MIT',
   description='some useful utilities for coding with Leetcode',
   author='Gancheng Yuan',
   author_email='scottyuan@outlook.com',
   url='https://github.com/mqfs/leetcodeutils',
-  download_url='https://github.com/mqfs/leetcodeutils/archive/refs/tags/v1.0.tar.gz',
+  download_url='https://github.com/mqfs/leetcodeutils/archive/refs/tags/v1.1.tar.gz',
   keywords=['leetcode', 'debug'],
   install_requires=[],
   classifiers=[

@@ -178,11 +178,11 @@ class CommonParamsResolver:
                     for node in temp_queue_1:
                         if node is None:
                             continue
-                        if param[i] == null:
+                        if i >= tree_size or param[i] == null:
                             left_child = None
                         else:
                             left_child = TreeNode(param[i])
-                        if param[i + 1] == null:
+                        if i + 1 >= tree_size or param[i + 1] == null:
                             right_child = None
                         else:
                             right_child = TreeNode(param[i + 1])
